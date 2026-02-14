@@ -76,8 +76,7 @@ if page == "Classify Text":
 elif page == "Classify Image":
     st.title("Image Classification")
     st.write(
-        "Upload an image. A caption will be generated using BLIP-1 "
-        "and then classified using the hybrid ensemble model."
+        "Upload an image."
     )
 
     uploaded_file = st.file_uploader(
