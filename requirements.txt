@@ -1,6 +1,5 @@
 torch
 transformers
-peft
 streamlit
 pandas
 numpy
@@ -8,3 +7,4 @@ scikit-learn
 Pillow
 joblib
 accelerate
+peft

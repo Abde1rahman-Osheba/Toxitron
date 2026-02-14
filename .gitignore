@@ -9,10 +9,9 @@ venv/
 env/
 .env/
 
-# Model artifacts (too large for Git — download at runtime or use Git LFS)
-toxic_hybrid_artifacts/
-distilbert_lora_toxic/
-albert_lora_toxic/
+# Checkpoint subdirectories from HF Trainer (large, not needed)
+distilbert_lora_toxic/checkpoint-*/
+albert_lora_toxic/checkpoint-*/
 
 # Database (generated at runtime)
 classifications_db.csv
