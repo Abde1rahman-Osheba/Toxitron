@@ -1,4 +1,3 @@
-
 import streamlit as st
 from PIL import Image
 
@@ -12,6 +11,7 @@ from database import save_record, load_records
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Text & Image Classifier",
+    page_icon="🔍",
     layout="wide",
 )
 
@@ -27,18 +27,18 @@ def get_classifier():
 # ---------------------------------------------------------------------------
 # Sidebar navigation
 # ---------------------------------------------------------------------------
-st.sidebar.title("Choose the what you want to check")
+st.sidebar.title("📋 Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["Text", "Image", "View Database"],
+    ["🔤 Classify Text", "🖼️ Classify Image", "📊 View Database"],
 )
 
 
 # ===========================================================================
 # PAGE 1 — Classify Text
 # ===========================================================================
-if page == "Classify Text":
-    st.title("Text Classification")
+if page == "🔤 Classify Text":
+    st.title("🔤 Text Classification")
     st.markdown(
         "Enter any text below and the hybrid ensemble model will classify it."
     )
@@ -72,14 +72,14 @@ if page == "Classify Text":
                 classification_label=result["label"],
                 confidence=result["confidence"],
             )
-            st.info("Result saved to database.")
+            st.info("✅ Result saved to database.")
 
 
 # ===========================================================================
 # PAGE 2 — Classify Image
 # ===========================================================================
-elif page == "Classify Image":
-    st.title("Image Classification")
+elif page == "🖼️ Classify Image":
+    st.title("🖼️ Image Classification")
     st.markdown(
         "Upload an image. A caption will be generated using **BLIP-1**, "
         "then the caption is classified by the hybrid ensemble."
@@ -122,14 +122,14 @@ elif page == "Classify Image":
                 classification_label=result["label"],
                 confidence=result["confidence"],
             )
-            st.info("Result saved to database.")
+            st.info("✅ Result saved to database.")
 
 
 # ===========================================================================
 # PAGE 3 — View Database
 # ===========================================================================
-elif page == "View Database":
-    st.title("Classification Database")
+elif page == "📊 View Database":
+    st.title("📊 Classification Database")
     st.markdown("All user inputs and their classification results are stored here.")
 
     records = load_records()
@@ -143,7 +143,7 @@ elif page == "View Database":
         # Download button
         csv_data = records.to_csv(index=False).encode("utf-8")
         st.download_button(
-            label="Download CSV",
+            label="📥 Download CSV",
             data=csv_data,
             file_name="classifications_db.csv",
             mime="text/csv",
