@@ -3,13 +3,11 @@ text_classifier.py
 ------------------
 Inference-only text classification module.
 
-Loads pre-trained artifacts saved by train.py:
-  - Merged DistilBERT (with LoRA baked in)
-  - Merged ALBERT (with LoRA baked in)
-  - Bidirectional LSTM
-  - LogisticRegression meta-model
-
-The Streamlit app imports this module — NO training happens here.
+Loads pre-trained artifacts:
+  - DistilBERT + LoRA adapter (from ./distilbert_lora_toxic/)
+  - ALBERT + LoRA adapter (from ./albert_lora_toxic/)
+  - Bidirectional LSTM (from ./toxic_hybrid_artifacts/)
+  - LogisticRegression meta-model (from ./toxic_hybrid_artifacts/)
 """
 
 import re
@@ -27,11 +25,15 @@ from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
 )
+from peft import PeftModel
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+DISTIL_BASE = "distilbert-base-uncased"
+ALBERT_BASE = "albert-base-v2"
 
 DISTIL_DIR = Path("./distilbert_lora_toxic")
 ALBERT_DIR = Path("./albert_lora_toxic")
@@ -118,6 +120,22 @@ def build_meta_features(p_distil, p_albert, p_lstm) -> np.ndarray:
 
 
 # ===========================================================================
+# PEFT model loader
+# ===========================================================================
+
+def load_peft_model(adapter_dir: str, base_model_name: str, num_labels: int):
+    """Load a PEFT (LoRA) adapter on top of its base model."""
+    tokenizer = AutoTokenizer.from_pretrained(adapter_dir, use_fast=True)
+    base_model = AutoModelForSequenceClassification.from_pretrained(
+        base_model_name, num_labels=num_labels
+    )
+    model = PeftModel.from_pretrained(base_model, adapter_dir)
+    model.to(DEVICE)
+    model.eval()
+    return model, tokenizer
+
+
+# ===========================================================================
 # TextClassifier — main public interface (inference only)
 # ===========================================================================
 
@@ -125,8 +143,9 @@ class TextClassifier:
     """
     Hybrid ensemble text classifier (inference only).
 
-    Loads merged model weights saved by train.py. If artifacts are missing,
-    raises an error telling the user to run train.py first.
+    Loads model weights from the saved PEFT adapter folders and
+    LSTM / meta-model artifacts. If artifacts are missing, raises
+    a clear error.
     """
 
     def __init__(self):
@@ -151,8 +170,8 @@ class TextClassifier:
             "LSTM weights": ARTIFACT_DIR / "lstm.pt",
             "LSTM vocab": ARTIFACT_DIR / "lstm_vocab.json",
             "Meta-model": ARTIFACT_DIR / "meta_model.joblib",
-            "DistilBERT config": DISTIL_DIR / "config.json",
-            "ALBERT config": ALBERT_DIR / "config.json",
+            "DistilBERT adapter": DISTIL_DIR / "adapter_config.json",
+            "ALBERT adapter": ALBERT_DIR / "adapter_config.json",
         }
         missing = [name for name, path in required.items() if not path.exists()]
         if missing:
@@ -169,19 +188,15 @@ class TextClassifier:
         )
         self.num_labels = len(self.label_names)
 
-        # DistilBERT (merged — loaded as a plain transformer, no PEFT needed)
-        self.distil_tok = AutoTokenizer.from_pretrained(str(DISTIL_DIR), use_fast=True)
-        self.distil_model = AutoModelForSequenceClassification.from_pretrained(
-            str(DISTIL_DIR)
-        ).to(DEVICE)
-        self.distil_model.eval()
+        # DistilBERT + LoRA adapter
+        self.distil_model, self.distil_tok = load_peft_model(
+            str(DISTIL_DIR), DISTIL_BASE, self.num_labels
+        )
 
-        # ALBERT (merged — loaded as a plain transformer, no PEFT needed)
-        self.albert_tok = AutoTokenizer.from_pretrained(str(ALBERT_DIR), use_fast=True)
-        self.albert_model = AutoModelForSequenceClassification.from_pretrained(
-            str(ALBERT_DIR)
-        ).to(DEVICE)
-        self.albert_model.eval()
+        # ALBERT + LoRA adapter
+        self.albert_model, self.albert_tok = load_peft_model(
+            str(ALBERT_DIR), ALBERT_BASE, self.num_labels
+        )
 
         # LSTM
         self.lstm_vocab = json.loads(

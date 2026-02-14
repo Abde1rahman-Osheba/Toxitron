@@ -1,0 +1,17 @@
+{
+  "add_prefix_space": true,
+  "backend": "tokenizers",
+  "bos_token": "[CLS]",
+  "cls_token": "[CLS]",
+  "do_lower_case": true,
+  "eos_token": "[SEP]",
+  "is_local": false,
+  "keep_accents": false,
+  "mask_token": "[MASK]",
+  "model_max_length": 512,
+  "pad_token": "<pad>",
+  "sep_token": "[SEP]",
+  "tokenizer_class": "AlbertTokenizer",
+  "trim_offsets": true,
+  "unk_token": "<unk>"
+}
