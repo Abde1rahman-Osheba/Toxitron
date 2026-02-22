@@ -1,4 +1,4 @@
-# Cellula Week 2 — Text & Image Classification
+# Toxitron
 
 A **Streamlit** application for toxic content classification using a hybrid ensemble of:
 
