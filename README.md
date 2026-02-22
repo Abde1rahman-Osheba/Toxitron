@@ -1,4 +1,4 @@
-# Toxitron
+# Toxi-tron
 
 A **Streamlit** application for toxic content classification using a hybrid ensemble of:
 
